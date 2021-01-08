@@ -3,4 +3,5 @@
 __pycache__
 
 base_de_datos/*
+!base_de_datos/usuarios_ejemplo.json
 pruebas.py
