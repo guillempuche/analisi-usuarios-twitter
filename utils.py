@@ -129,18 +129,18 @@ class RecolectarUsuarios(object):
                 historial_usuario)
 
             # Añadir interacciones al usuario.
-            usuarios_nuevos[posicion]['tweets_con_interacciones'] = interacciones_filtradas['tweets_con_interacciones']
+            usuarios_nuevos[posicion]['usuarios_interaccionados'] = interacciones_filtradas['usuarios_interaccionados']
             usuarios_nuevos[posicion]['tweets_sin_interacciones'] = interacciones_filtradas['tweets_sin_interacciones']
 
         return usuarios_nuevos
 
 
+# Obtener interacciones según 2 clasificaciones:
+# - interacciones de usuarios mencionados
+# - interacciones sin usuarios mencionados
+# IMPORTANTE: las interacciones pueden ser tweet,
+# retweet, respuesta o cita a un tweet.
 class Filtro(object):
-    # Obtener interacciones según 2 clasificaciones:
-    # - interacciones de usuarios mencionados
-    # - interacciones sin usuarios mencionados
-    # IMPORTANTE: las interacciones pueden ser tweet,
-    # retweet, respuesta o cita a un tweet.
     @staticmethod
     def categorizar_interacciones(historial_interacciones_twitter) -> dict:
 
@@ -184,11 +184,6 @@ class Filtro(object):
 
             # Extraer usuarios mencionados en la interaccicón
             if ('entities' in i) and ('mentions' in i['entities']):
-                # mentions = i['entities']['mentions']
-
-                #  next(((usuario[key], dict(usuario, posicion=posicion)) for (posicion, usuario) in enumerate(lista_usuarios)
-                #          if usuario["id"] == id_usuario or usuario['nombre_usuario'] == nombre_usuario),
-                #         None)
                 for mention in i['entities']['mentions']:
                     if 'username' in mention:
                         existe_usuario = None
@@ -214,16 +209,12 @@ class Filtro(object):
                             usuarios_interaccionados[posicion]['interacciones'].append(
                                 interaccion)
 
-                # usuarios_interaccionados = [get_usuario_con_interaccion(mention['username'], interaccion)
-                #                             for mention in mentions if 'username' in mention]
-                # next((item for item in dicts if item["name"] == "Pam"), False)
-                # next(iter(usuarios) if referenced_tweets["name"] == "Pam")
             else:
                 # Si no hay usuarios mencionados, guardar tweets sin menciones
                 tweets_sin_interacciones.append(interaccion)
 
         return {
-            'tweets_con_interacciones': usuarios_interaccionados,
+            'usuarios_interaccionados': usuarios_interaccionados,
             'tweets_sin_interacciones': tweets_sin_interacciones
         }
 

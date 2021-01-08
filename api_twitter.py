@@ -1,51 +1,11 @@
 import requests
 import os
-from requests.auth import HTTPBasicAuth
-
 
 from modelos import Usuario
 from autentificar import get_access_token
 
 
 class Api(object):
-    # modo_arranque = os.getenv('MODO_ARRANQUE')
-    # api_twitter_url = os.getenv('API_TWITTER_URL')
-    # API_TWITTER_URL = os.getenv('API_TWITTER_URL')
-    # access_token = None
-    # @property
-    # def api_twitter_url():
-    #     return os.getenv('API_TWITTER_URL')
-
-    # modo_arranque = os.getenv('MODO_ARRANQUE')
-    # api_twitter_url = os.getenv('API_TWITTER_URL')
-    # __access_token = Tokens().get_access_token
-
-    # def __init__(self) -> None:
-    # cargar_env_variables()
-    # self.modo_arranque = os.getenv('MODO_ARRANQUE')
-    # Api.api_twitter_url = os.getenv('API_TWITTER_URL')
-    # Api.__access_token = Tokens().get_access_token
-
-    # @staticmethod
-    # def get_access_token():
-    #     global access_token
-    #     consumer_key = os.getenv('CONSUMER_KEY')
-    #     consumer_secret = os.getenv('CONSUMER_SECRET')
-
-    #     if type(access_token) is not str:
-    #         # # Variables constantes
-    #         # api_twitter_url = os.getenv('API_TWITTER_URL')
-    #         # consumer_key = os.getenv('CONSUMER_KEY')
-    #         # consumer_secret = os.getenv('CONSUMER_SECRET')
-
-    #         # Autentificar a la API de Twitter. Nos va a dar la clave
-    #         # 'access_token' para sacar datos a la API
-    #         respuesta = requests.post(os.getenv('API_TWITTER_URL')+'/oauth2/token',
-    #                                   data={'grant_type': 'client_credentials'},
-    #                                   auth=HTTPBasicAuth(consumer_key, consumer_secret))
-    #         access_token = respuesta.json()['access_token']
-    #         return access_token
-
     # Obtener perfil de Twitter de un usuario.
     # Argumento 'username' debe ser tipo String.
     @staticmethod
@@ -76,12 +36,6 @@ class Api(object):
     # Argumento 'usernames' debe ser una lista de tipo `str`.
     @staticmethod
     def get_usuarios_segun_nombre_usuario(nombre_usuarios) -> list:
-        # from pathlib import Path
-        # from dotenv import load_dotenv
-        # env_path = Path(__file__).resolve().parent / '.env'
-        # load_dotenv(dotenv_path=env_path)
-        # os.getenv('API_TWITTER_URL') = os.getenv('os.getenv('API_TWITTER_URL')')
-
         usuarios = []
         nombre_usuarios_agrupados = ','.join(nombre_usuarios)
         access_token = get_access_token()

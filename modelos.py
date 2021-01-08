@@ -19,23 +19,14 @@ class Usuario(Util):
                  numero_seguidores,
                  numero_seguidos,
                  tweets_sin_interacciones=[],
-                 tweets_con_interacciones=[]):
+                 usuarios_interaccionados=[]):
         self.id = id
         self.nombre_usuario = nombre_usuario
         self.nombre = nombre
         self.numero_seguidores = numero_seguidores
         self.numero_seguidos = numero_seguidos
         self.tweets_sin_interacciones = tweets_sin_interacciones
-        self.tweets_con_interacciones = tweets_con_interacciones
-
-    # def get(self) -> dict:
-    #     return self
-
-    # def get_dict(self) -> dict:
-    #     self.__dict__
-
-    # def get_json(self) -> json:
-    #     return json.dumps(self.__dict__)
+        self.usuarios_interaccionados = usuarios_interaccionados
 
 
 class UsuarioInteraccionado(Util):
@@ -43,9 +34,6 @@ class UsuarioInteraccionado(Util):
         self.nombre_usuario = nombre_usuario
         self.id = id
         self.interacciones = []
-        # self.retweets = []
-        # self.respuestas = []
-        # self.citas = []
 
     def anadir_nombre_usuario(self, nombre_usuario):
         self.nombre_usuario = nombre_usuario

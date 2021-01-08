@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import requests
 from requests.auth import HTTPBasicAuth
 import os
@@ -6,9 +5,10 @@ import os
 
 access_token = None
 
+
 def get_access_token():
     global access_token
-    
+
     if type(access_token) is str:
         return access_token
     else:
