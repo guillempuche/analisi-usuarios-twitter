@@ -76,15 +76,19 @@ class Api(object):
         numero_interacciones_por_solicitud = 0
         ACCESS_TOKEN = get_access_token()
         MODO_ARRANQUE = os.getenv('MODO_ARRANQUE')
+
         # Hacemos la primera solicitud de datos (Twitter pone un límite de
         # 100 ítems por cada solicitud). Si estamos en modo prueba (modo debug),
         # solo solicitamos las 30 últimas interacciones del usuario.
         # Más información en https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-tweets
-        respuesta = requests.get('{}/2/users/{}/tweets?max_results={}&tweet.fields=text,author_id,entities,in_reply_to_user_id,referenced_tweets,created_at,lang&media.fields=type,public_metrics'
+        respuesta = requests.get('{}/2/users/{}/tweets?max_results={}&tweet.fields=text,author_id,entities,in_reply_to_user_id,referenced_tweets,created_at,lang,public_metrics&media.fields=type,public_metrics'
                                  .format(os.getenv('API_TWITTER_URL'), id_usuario, 100 if MODO_ARRANQUE != 'debug' else 20),
                                  headers={'Authorization': 'Bearer {}'.format(ACCESS_TOKEN)})
+
         print('historial userid={} con respuesta={}'.format(id_usuario, respuesta))
+
         historial = HttpResponse.get_campo_data(respuesta)
+
         numero_total_interacciones += HttpResponse.get_campo_meta(respuesta)[
             'result_count']
         token_siguiente_solicitud = HttpResponse.get_campo_meta(respuesta)[
@@ -94,25 +98,32 @@ class Api(object):
         # 500 ítems del historial del usuario.
         # En mode DEBUG, solo cogemos pocos datos
         # IMPORTANTE: Twitter no deja recabar más de 100 resultados por solicitud
-        while (MODO_ARRANQUE != 'debug' and numero_total_interacciones < 200):
-            # Código para hacer solitidues de los siguiente datos del historial del usuario
+        while (MODO_ARRANQUE != 'debug' and numero_total_interacciones < 400):
+            # Código para hacer solicitudes de los siguiente datos del historial del usuario
 
-            respuesta = requests.get('{}/2/users/{}/tweets?max_results=100&pagination_token={}tab&tweet.fields=text,author_id,entities,in_reply_to_user_id,referenced_tweets&user.fields=id,name,username,description,location,public_metrics,url&media.fields=type,public_metrics'
-                                     .format(os.getenv('API_TWITTER_URL'), token_siguiente_solicitud, id_usuario),
+            respuesta = requests.get('{}/2/users/{}/tweets?max_results=100&pagination_token={}&tweet.fields=text,author_id,entities,in_reply_to_user_id,referenced_tweets,created_at,lang,public_metrics&media.fields=type,public_metrics'
+                                     .format(os.getenv('API_TWITTER_URL'), id_usuario, token_siguiente_solicitud),
                                      headers={'Authorization': 'Bearer {}'.format(ACCESS_TOKEN)})
+
             interacciones = HttpResponse.get_campo_data(respuesta)
-            historial.append(interacciones)  # Añadir a datos a la historial
+
+            # Unir lista de nuevas interacciones a la lista de historial
+            historial.extend(interacciones)
+            # historial = [*historial, *interacciones]
+            # historial= list(chain(historial, interacciones))
+
             numero_interacciones_por_solicitud = HttpResponse.get_campo_meta(respuesta)[
                 'result_count']
-            numero_total_interacciones += HttpResponse.get_campo_meta(respuesta)[
-                'result_count']
+            numero_total_interacciones += numero_interacciones_por_solicitud
             token_siguiente_solicitud = HttpResponse.get_campo_meta(respuesta)[
                 'next_token']
+
+            print('numero_total_interacciones=', numero_total_interacciones)
 
             # Si en la solicitud obtenemos menos de 10 resultados, quiere decir que
             # no hay más historial del usuario. Por tanto, paramos las solicitudes.
             # Sino, continuamos haciendo solicitudes.
-            if numero_interacciones_por_solicitud < 10:
+            if numero_interacciones_por_solicitud < 100:
                 break
             else:
                 continue
