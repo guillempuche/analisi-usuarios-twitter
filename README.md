@@ -7,9 +7,8 @@ Pasos a seguir para arrancar el programa:
 - Descargar proyecto y guardarlo a una carpeta
 - Instalar librarías con estos comandos:
 ```
-python -m pip install requests python-dotenv pandas openpyxl
+python -m pip install requests python-dotenv pandas
 ```
-Si no quieres crear archivos Excel (y solo  CSV), no hace falta que instales `openpyxl`
 - Crear un archivo `.env` (en el directorio del programa) con las mismas variables que hay en el fichero de ejemplo `.env.example`. Rellenalas con los datos que estan en proyecto creado en la [web de la API de Twitter]
 - Abrir el terminal de tu ordenador
 - [Desdel terminal] Abrir entrar a la carpeta donde se encuentran los archivos del proyecto.

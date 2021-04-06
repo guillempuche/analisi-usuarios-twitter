@@ -1,5 +1,6 @@
 import requests
 import os
+import math
 
 from modelos import Usuario
 from autentificar import get_access_token
@@ -15,7 +16,7 @@ class Api(object):
 
         # Más información sobre los datos recibidos en
         # https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
-        respuesta = requests.get('{}/2/users/by/username/{}?user.fields=created_at,description,entities,id,location,name,profile_image_url,public_metrics,url,username'
+        respuesta = requests.get('{}/2/users/by/username/{}?user.fields=created_at,description,entities,id,location,name,public_metrics,url,username'
                                  .format(os.getenv('API_TWITTER_URL'), username),
                                  headers={'Authorization': 'Bearer {}'.format(access_token)})
         # Ejemplo del campo 'data'
@@ -29,38 +30,55 @@ class Api(object):
         # }
         data = HttpResponse.get_campo_data(respuesta)
         usuario = Usuario(data['id'], data['username'], data['name'],
-                          data['public_metrics']['followers_count'], data['public_metrics']['following_count'])
+                          data['public_metrics']['followers_count'], data['public_metrics']['following_count'], data['description'], data['url'])
         return usuario.__dict__
 
     # Obtener perfiles de Twitter de una lista de máximo 100 usuarios.
-    # Argumento 'usernames' debe ser una lista de tipo `str`.
+    # Argumento 'nombres_usuarios' debe ser una lista de tipo `str`.
+    # La API de Twitter tiene límites, solo podemos 300 requests cada 15 minutos.
+    # https://developer.twitter.com/en/docs/twitter-api/rate-limits
     @staticmethod
-    def get_usuarios_segun_nombre_usuario(nombre_usuarios) -> list:
+    def get_perfiles_usuarios_segun_nombre_usuario(nombres_usuarios) -> list:
+        if type(nombres_usuarios) != list or len(nombres_usuarios) == 0:
+            raise ValueError(
+                'Argumento nombre_usuarios={} es incorrecto'.format(nombres_usuarios))
+
         usuarios = []
-        nombre_usuarios_agrupados = ','.join(nombre_usuarios)
+
         access_token = get_access_token()
 
-        # Más información sobre los datos recibidos en
-        # https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
-        respuesta = requests.get('{}/2/users/by?usernames={}&user.fields=created_at,description,entities,id,location,name,profile_image_url,public_metrics,url,username'
-                                 .format(os.getenv('API_TWITTER_URL'), nombre_usuarios_agrupados),
-                                 headers={'Authorization': 'Bearer {}'.format(access_token)})
+        # Si hay más de 100 usuarios, haremos grupos de 100 debido a que la API de Twitter
+        # no premite ,ás de 100 usuarios por request.
+        # Arrondeamos el número, eg: si 175/100=1.75, se convierte en 2 veces; si 65/100=0.65, se convierte en 1 vez.
+        veces_numero_cien = math.ceil(len(nombres_usuarios)/100)
+        inici = 0
+        final = 100
+        for _ in range(veces_numero_cien):
+            nombres_usuarios_agrupados = ','.join(
+                nombres_usuarios[inici:final])
+            inici += 100
+            final += 100
 
-        # Ejemplo de los datos
-        # [{
-        #     'id': '197103453',
-        #     'username': 'sergidelmoral',
-        #     'name': 'Sergi del Moral',
-        #     'public_metrics': {
-        #         'followers_count': 6850, 'following_count': 1060, 'tweet_count': 17391, 'listed_count': 218
-        #         }
-        # }]
-        data = HttpResponse.get_campo_data(respuesta)
+            # Más información sobre los datos recibidos en
+            # https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
+            respuesta = requests.get('{}/2/users/by?usernames={}&user.fields=created_at,description,entities,id,location,name,public_metrics,url,username'
+                                     .format(os.getenv('API_TWITTER_URL'), nombres_usuarios_agrupados),
+                                     headers={'Authorization': 'Bearer {}'.format(access_token)})
+            # Ejemplo de los datos
+            # [{
+            #     'id': '197103453',
+            #     'username': 'sergidelmoral',
+            #     'name': 'Sergi del Moral',
+            #     'public_metrics': {
+            #         'followers_count': 6850, 'following_count': 1060, 'tweet_count': 17391, 'listed_count': 218
+            #         }
+            # }]
+            data = HttpResponse.get_campo_data(respuesta)
 
-        for usuario in data:
-            usuario = Usuario(usuario['id'], usuario['username'], usuario['name'],
-                              usuario['public_metrics']['followers_count'], usuario['public_metrics']['following_count'])
-            usuarios.append(usuario.__dict__)
+            for usuario in data:
+                usuario = Usuario(usuario['id'], usuario['username'], usuario['name'],
+                                  usuario['public_metrics']['followers_count'], usuario['public_metrics']['following_count'], usuario['description'], usuario['url'])
+                usuarios.append(usuario.__dict__)
 
         return usuarios
 
@@ -85,7 +103,8 @@ class Api(object):
                                  .format(os.getenv('API_TWITTER_URL'), id_usuario, 100 if MODO_ARRANQUE != 'debug' else 20),
                                  headers={'Authorization': 'Bearer {}'.format(ACCESS_TOKEN)})
 
-        print('historial userid={} con respuesta={}'.format(id_usuario, respuesta))
+        print('historial id del usuario={} con respuesta={}'.format(
+            id_usuario, respuesta))
 
         historial = HttpResponse.get_campo_data(respuesta)
 

@@ -18,13 +18,19 @@ class Usuario(Util):
                  nombre,
                  numero_seguidores,
                  numero_seguidos,
+                 descripcion="",
+                 url="",
                  tweets_sin_interacciones=[],
-                 usuarios_interaccionados=[]):
+                 usuarios_interaccionados=[]
+                 ):
         self.id = id
         self.nombre_usuario = nombre_usuario
         self.nombre = nombre
         self.numero_seguidores = numero_seguidores
         self.numero_seguidos = numero_seguidos
+        # Quitar el carácter de cambio de línia "\n" en la descripción
+        self.descripcion = descripcion.replace('\n', ' ')
+        self.url = url
         self.tweets_sin_interacciones = tweets_sin_interacciones
         self.usuarios_interaccionados = usuarios_interaccionados
 
