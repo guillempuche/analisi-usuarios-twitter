@@ -35,7 +35,7 @@ class RecolectarDatos(object):
                 'usuario':  lista_usuarios[posicion]
             }
 
-    # Buscar listado de usuarios según campo i su correspondiente valor por cada usuario
+    # Buscar listado de usuarios según campo y su correspondiente valor por cada usuario
     # Argumento 'campo' puede ser 'nombre_usuario' o 'id' y su argumento
     # 'valor' correspondiente.
     @staticmethod
@@ -50,7 +50,7 @@ class RecolectarDatos(object):
                 'Argumento campo={} no es "nombre_usuario" o "id"'.format(campo))
         if len(usuarios) == 0:
             print(
-                'buscar_usuarios_con_posiciones - La lista de usuarios no contiene ningún usuario')
+                'buscar_usuarios_con_posiciones - La lista de usuarios no contiene ningún usuario a buscar')
             lista['usuarios_no_encontrados'] = valores
             return lista
 
@@ -59,7 +59,7 @@ class RecolectarDatos(object):
                 usuarios, campo, valor)
 
             if existe_usuario == None:
-                return lista['usuarios_no_encontrados'].append(valor)
+                lista['usuarios_no_encontrados'].append(valor)
             else:
                 lista['usuarios_encontrados'].append({
                     'posicion': existe_usuario['posicion'],
@@ -132,17 +132,23 @@ class RecolectarDatos(object):
         # Devolver usuarios a buscar con sus interacciones
         return usuarios_que_existen.extend(usuarios_nuevos)
 
+    # Buscar interacciones de usuarios en Twitter, guardar todos los
+    # datos en la base de datos 'usuarios_con_sus_interacciones' y
+    # guardar las interacciones en la base de datos 'interacciones'.
+    # Este método tiene en cuenta los usuarios duplicados y no los guarda
+    # en las bases de datos.
     @staticmethod
     def buscar_usuarios_y_interacciones_y_guardar_en_archivos(lista_usuarios_a_buscar) -> None:
         if (type(lista_usuarios_a_buscar) is not list or len(lista_usuarios_a_buscar) == 0):
             raise ValueError(
                 'Argumento list_usuarios_a_buscar={} es incorrecto'.format(lista_usuarios_a_buscar))
 
+        # --------------------------------------
         # PASO 1: Buscar los perfiles de los usuarios nuevos y su historial
         # de interacción. Luego guardar los datos en la base de datos.
 
         # IMPORTANTE: si el programa se inicia por primera vez,
-        # debemos crear el fichero donde se guardará la información
+        # debemos crear la base de datos donde se guardará la información
         # de los usuarios.
         if path.exists('./base_de_datos/usuarios_con_sus_interacciones.json') == False:
             Archivo.guardar_a_archivo_json('usuarios', [])
@@ -176,7 +182,6 @@ class RecolectarDatos(object):
 
         # guardar_información = RecolectarDatos.buscar_usuarios_con_posiciones(
         #     usuarios_encontrados, 'nombre_usuario', lista_usuarios_a_buscar)
-
         # if len(usuarios_nuevos) > 0:
         #     # Añadir los usuarios nuevos a en la base de datos.
         #     usuarios_base_datos = list(
@@ -184,6 +189,7 @@ class RecolectarDatos(object):
         #     Archivo.guardar_a_archivo_json(
         #         'usuarios_con_sus_interacciones', usuarios_base_datos)
 
+        # --------------------------------------
         # PASO 2: Guardarlas interacciones de los usuarios a buscar en la
         # base de datos de interacciones
 
@@ -219,45 +225,46 @@ class RecolectarDatos(object):
             #                 filas=filas)
 
             usuario_encontrado = RecolectarDatos.buscar_usuario_con_posicion(
-                usuarios_base_datos, 'nombre_usuario', usuario_a_buscar)
+                todas_las_interacciones, 'nombre_usuario', usuario_a_buscar)
 
             if usuario_encontrado is None:
-                raise ValueError(
-                    'Usuario {} no encontrado en la base de datos'.format(usuario_a_buscar))
+                # raise ValueError(
+                #     'Usuario {} no encontrado en la base de datos'.format(usuario_a_buscar))
+                posicion = usuario_encontrado['posicion']
 
-            posicion = usuario_encontrado['posicion']
+                usuario_origen = usuario_encontrado['usuario']['nombre_usuario']
 
-            usuario_origen = usuario_encontrado['usuario']['nombre_usuario']
+                usuarios_interaccionados = usuarios_base_datos[
+                    posicion]['usuarios_interaccionados']
 
-            usuarios_interaccionados = usuarios_base_datos[
-                posicion]['usuarios_interaccionados']
+                # print(usuarios_interaccionados[0])
 
-            # print(usuarios_interaccionados[0])
+                interacciones = Filtro.lista_usuarios_interaccionados(
+                    usuarios_interaccionados, usuario_origen)
 
-            interacciones = Filtro.lista_usuarios_interaccionados(
-                usuarios_interaccionados, usuario_origen)
+                todas_las_interacciones.extend(interacciones)
 
-            todas_las_interacciones.extend(interacciones)
+                filas = []
 
-            filas = []
+                for usuario in interacciones:
+                    filas.append([
+                        usuario['nombre_usuario'],
+                        usuario['total_interacciones'],
+                        usuario['total_tweets'],
+                        usuario['total_retweets'],
+                        usuario['total_respuestas'],
+                        usuario['total_citas'],
+                        usuario['usuario_origen']
+                    ])
 
-            for usuario in interacciones:
-                filas.append([
-                    usuario['nombre_usuario'],
-                    usuario['total_interacciones'],
-                    usuario['total_tweets'],
-                    usuario['total_retweets'],
-                    usuario['total_respuestas'],
-                    usuario['total_citas'],
-                    usuario['usuario_origen']
-                ])
-
-            tabla = Tabla(
-                columnas=['nombre_usuario', 'total_interacciones', 'total_tweets',
-                          'total_retweets', 'total_respuestas', 'total_citas', 'usuario_origen'],
-                filas=filas
-            )
-            tabla_completa['filas'].extend(tabla['filas'])
+                # La tabla contiene las interacciones de la base
+                # de datos junto a las nuevas interacciones.
+                tabla = Tabla(
+                    columnas=['nombre_usuario', 'total_interacciones', 'total_tweets',
+                              'total_retweets', 'total_respuestas', 'total_citas', 'usuario_origen'],
+                    filas=filas
+                )
+                tabla_completa['filas'].extend(tabla['filas'])
 
         # Guardar todas las interacciones en un archvo JSON y otro CSV
         Archivo.guardar_a_archivo_json(
@@ -267,6 +274,7 @@ class RecolectarDatos(object):
                                       columnas=tabla_completa['columnas'],
                                       filas=tabla_completa['filas'])
 
+    # Buscar perfiles de usuarios (se filtran los duplicados)
     @staticmethod
     def buscar_perfiles_usuarios_y_guardar_en_archivo(nombres_usuarios) -> None:
         if type(nombres_usuarios) != list or len(nombres_usuarios) == 0:
@@ -304,7 +312,7 @@ class RecolectarDatos(object):
 
         # Columnas para poner en el archivo CSV.
         columnas = ['id', 'nombre_usuario', 'nombre',
-                    'numero_seguidores', 'numero_seguidos', 'descripcion', 'url']
+                    'numero_seguidores', 'numero_seguidos', 'descripcion', 'url', 'localidad']
         # Guardar todos valores de cada campo de cada usuario en una lista de filas.
         filas = []
         for perfil in todos_perfiles_usuarios:
@@ -316,6 +324,7 @@ class RecolectarDatos(object):
                 perfil['numero_seguidos'],
                 perfil['descripcion'],
                 perfil['url'],
+                perfil['localidad'],
             ])
 
         Archivo.guardar_a_archivo_csv('perfiles_usuarios', columnas, filas)

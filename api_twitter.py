@@ -30,7 +30,7 @@ class Api(object):
         # }
         data = HttpResponse.get_campo_data(respuesta)
         usuario = Usuario(data['id'], data['username'], data['name'],
-                          data['public_metrics']['followers_count'], data['public_metrics']['following_count'], data['description'], data['url'])
+                          data['public_metrics']['followers_count'], data['public_metrics']['following_count'], data['description'], data['url'], data['location'])
         return usuario.__dict__
 
     # Obtener perfiles de Twitter de una lista de máximo 100 usuarios.
@@ -77,7 +77,7 @@ class Api(object):
 
             for usuario in data:
                 usuario = Usuario(usuario['id'], usuario['username'], usuario['name'],
-                                  usuario['public_metrics']['followers_count'], usuario['public_metrics']['following_count'], usuario['description'], usuario['url'])
+                                  usuario['public_metrics']['followers_count'], usuario['public_metrics']['following_count'], usuario['description'], usuario['url'], usuario['location'])
                 usuarios.append(usuario.__dict__)
 
         return usuarios

@@ -20,6 +20,7 @@ class Usuario(Util):
                  numero_seguidos,
                  descripcion="",
                  url="",
+                 localidad="",
                  tweets_sin_interacciones=[],
                  usuarios_interaccionados=[]
                  ):
@@ -29,8 +30,10 @@ class Usuario(Util):
         self.numero_seguidores = numero_seguidores
         self.numero_seguidos = numero_seguidos
         # Quitar el carácter de cambio de línia "\n" en la descripción
-        self.descripcion = descripcion.replace('\n', ' ')
+        self.descripcion = descripcion.replace('\n', ' ').replace(
+            '\r', ' ').replace('\t', ' ').replace('\f', ' ')
         self.url = url
+        self.localidad = localidad
         self.tweets_sin_interacciones = tweets_sin_interacciones
         self.usuarios_interaccionados = usuarios_interaccionados
 
